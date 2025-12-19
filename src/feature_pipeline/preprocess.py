@@ -25,6 +25,7 @@ from rapidfuzz import process
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
 PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+US_METROS_CSV = RAW_DIR / "usmetros.csv"
 
 # Manual fixes for known mismatches (normalized form)
 # CITY_MAPPING = {
@@ -79,7 +80,7 @@ def normalize_city(s: str) -> str:
     return s
 
 
-def clean_and_merge(df: pd.DataFrame, metros_path: str | None = "data/raw/usmetros.csv") -> pd.DataFrame:
+def clean_and_merge(df: pd.DataFrame, metros_path: str | None = US_METROS_CSV) -> pd.DataFrame:
     """
     Normalize city names, optionally merge lat/lng from metros dataset.
     If `city_full` column or `metros_path` is missing, skip gracefully.
@@ -96,19 +97,19 @@ def clean_and_merge(df: pd.DataFrame, metros_path: str | None = "data/raw/usmetr
     norm_mapping = {normalize_city(k): normalize_city(v) for k, v in CITY_MAPPING.items()}
     df["city_full"] = df["city_full"].replace(norm_mapping)
 
-    if metros_path is not None:
-        #get unique city names from train_df
-        unique_values = df["city_full"].unique()
-        # Convert to a new DataFrame
-        train_df_city_names = pd.DataFrame(unique_values, columns=["city_full"])
+    # if metros_path is not None:
+    #     #get unique city names from train_df
+    #     unique_values = df["city_full"].unique()
+    #     # Convert to a new DataFrame
+    #     train_df_city_names = pd.DataFrame(unique_values, columns=["city_full"])
 
-        #get unique city names from metros
-        metros = pd.read_csv(metros_path)
-        unique_metro_values = metros["metro_full"].unique()
-        # Convert to a new DataFrame
-        metros_city_names = pd.DataFrame(unique_metro_values, columns=["metro_full"])
-        mapping = {x: process.extractOne(x, metros_city_names["metro_full"])[0] for x in train_df_city_names["city_full"].unique()}
-        df["city_full"] = df["city_full"].replace(mapping)
+    #     #get unique city names from metros
+    #     metros = pd.read_csv(metros_path)
+    #     unique_metro_values = metros["metro_full"].unique()
+    #     # Convert to a new DataFrame
+    #     metros_city_names = pd.DataFrame(unique_metro_values, columns=["metro_full"])
+    #     mapping = {x: process.extractOne(x, metros_city_names["metro_full"])[0] for x in train_df_city_names["city_full"].unique()}
+    #     df["city_full"] = df["city_full"].replace(mapping)
 
 
     # 🚨 If lat/lng already present, skip merge
