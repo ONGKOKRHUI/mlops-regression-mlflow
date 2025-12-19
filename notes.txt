@@ -1,3 +1,17 @@
-terminal: python -m mlflow ui
+1. terminal: python -m mlflow ui
 allows us to view trained models via http local host 
+
+2. terminal: python -m uvicorn src.api.main:app --reload
+to run fast api app
+
+3. test docker locally
+
+#Build a Docker image from current directory
+# search for explicit name Dockerfile
+docker build -t housing-api .
+
+#Run the image and expose API on localhost:8000
+docker run -p 8000:8000 housing-api
+
+Open: http://localhost:8000/docs
 
