@@ -1,0 +1,3 @@
+terminal: python -m mlflow ui
+allows us to view trained models via http local host 
+
