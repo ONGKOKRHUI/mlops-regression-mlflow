@@ -1,5 +1,5 @@
 """
-⚡ Preprocessing Script for Housing Regression MLE
+⚡ Preprocessing Script for Housing Regression MLE 
 
 - Reads train/eval/holdout CSVs from data/raw/.
 - Cleans and normalizes city names.
@@ -20,6 +20,7 @@ Preprocessing: city normalization + (optional) lat/lng merge, duplicate drop, ou
 import re
 from pathlib import Path
 import pandas as pd
+from rapidfuzz import process
 
 RAW_DIR = Path("data/raw")
 PROCESSED_DIR = Path("data/processed")
@@ -60,9 +61,25 @@ def clean_and_merge(df: pd.DataFrame, metros_path: str | None = "data/raw/usmetr
 
     # Normalize city_full
     df["city_full"] = df["city_full"].apply(normalize_city)
+
     # Apply mapping
-    norm_mapping = {normalize_city(k): normalize_city(v) for k, v in CITY_MAPPING.items()}
-    df["city_full"] = df["city_full"].replace(norm_mapping)
+    #norm_mapping = {normalize_city(k): normalize_city(v) for k, v in CITY_MAPPING.items()}
+    #df["city_full"] = df["city_full"].replace(norm_mapping)
+
+    if metros_path is not None:
+        #get unique city names from train_df
+        unique_values = df["city_full"].unique()
+        # Convert to a new DataFrame
+        train_df_city_names = pd.DataFrame(unique_values, columns=["city_full"])
+
+        #get unique city names from metros
+        metros = pd.read_csv(metros_path)
+        unique_metro_values = metros["metro_full"].unique()
+        # Convert to a new DataFrame
+        metros_city_names = pd.DataFrame(unique_metro_values, columns=["metro_full"])
+        mapping = {x: process.extractOne(x, metros_city_names["metro_full"])[0] for x in train_df_city_names["city_full"].unique()}
+        df["city_full"] = df["city_full"].replace(mapping)
+
 
     # 🚨 If lat/lng already present, skip merge
     if {"lat", "lng"}.issubset(df.columns):
